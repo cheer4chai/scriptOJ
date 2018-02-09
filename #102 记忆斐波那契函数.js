@@ -14,7 +14,6 @@
 // 测试程序会从按顺序依次获取斐波那契数列中的数，请注意程序不要超时，也不要添加额外的全局变量。
 
 // 本题来源：《JavaScript 语言精髓》
-
 let arr = [0, 1, 1];
 const fibonacci1 = (n) => {
     return arr[n] || (arr[n] = fibonacci1(n - 1) + fibonacci1(n - 2))
