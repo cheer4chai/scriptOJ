@@ -62,3 +62,9 @@ const render = (template, data) => {
     new Function(...params, "yield", code)(...params.map(name => data[name]), t => output.push(t))
     return output.join('')
 }
+
+// new Function(...params, "yield", code) 
+
+// function(...params,yield) {
+//     plain.map((txt, i) => i in dynamic ? `yield(${JSON.stringify(txt)})\n${dynamic[i]}\n` : `yield(${JSON.stringify(txt)})\n`).join('')
+// }
