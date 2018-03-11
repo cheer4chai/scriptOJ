@@ -4,7 +4,7 @@ function objectFactory() {
 
     var obj = new Object(),
 
-    Constructor = [].shift.call(arguments);
+        Constructor = [].shift.call(arguments);
 
     obj.__proto__ = Constructor.prototype;
 
@@ -26,4 +26,5 @@ Function.prototype.bind2 = function(context) {
         // 当作为普通函数时，this 指向 window，此时结果为 false，将绑定函数的 this 指向 context
         return self.apply(this instanceof fBound ? this : context, args.concat(bindArgs));
     }
+    return fBound
 }
