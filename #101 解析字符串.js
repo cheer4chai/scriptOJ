@@ -6,6 +6,7 @@
 
 // （本题来源：《JavaScript Cookbook》）
 
+
 const extractStr = (str) => {
     return ':.' + str.match(/\:([^\:\.]*)(?=\.)/g).split(1).map(x => x.slice(1))
 }
