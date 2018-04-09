@@ -33,9 +33,6 @@ const bindViewToData = (el, data) => {
 }
 
 function observer(obj) {
-    this,walk(obj);
-}
-function observer(obj) {
     this.obj = obj;
     this.walk(obj);
 }
