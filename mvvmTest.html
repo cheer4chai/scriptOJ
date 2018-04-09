@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>mvvm test</title>
+</head>
+
+<body>
+    <div id="app">
+        hello{{firstName}}, I am {{age}} years old
+    </div>
+    <script>
+        
+        function observer(obj) {
+            this.obj = obj;
+            this.walk(obj);
+        }
+        observer.prototype = {
+            walk: function (obj) {
+
+                for (let key in obj) {
+                    if (!obj.hasOwnProperty(key)) return;
+                    let val = obj[key];
+                    this.convert(key, val);
+                }
+            },
+            convert: function (key, val) {
+                let _this = this;
+                Object.defineProperty(this.obj, key, {
+                    enumerable: true,
+                    configurable: true,
+                    get: function () {
+                        return val
+                    },
+                    set: function (newVal) {
+                        if (newVal === val) return;
+                        val = newVal;
+                        _this.notify('set', key, newVal);
+                    }
+                })
+            },
+            notify: function (event, path, val) {
+                this._cbs = this._cbs || {};
+                let callbacks = this._cbs[event];
+                if (!callbacks) return;
+                callbacks = callbacks.slice(0);
+                callbacks.forEach((cb, i) => {
+                    callbacks[i].apply(this, arguments);
+                })
+            },
+            on: function (event, fn) {
+                this._cbs = this._cbs || {};
+                if (!this._cbs[event]) {
+                    this._cbs[event] = [];
+                }
+                this._cbs[event].push(fn);
+            }
+        }
+
+        function Directive(name, el, vm, expression) {
+            this.name = name;
+            this.el = el;
+            this.vm = vm;
+            this.expression = expression;
+
+            this.update()
+        }
+        Directive.prototype = {
+            update: function () {
+                this.el['nodeValue'] = this.vm.data[this.expression];
+                console.log(`更新了DOM-${this.expression}`)
+            }
+        }
+
+        const appData = {
+            firstName: 'Lucy',
+            lastName: 'Green',
+            age: 13
+        }
+        
+        function mvvm(option) {
+            this.data = option.data;
+            this.el = option.el;
+            this._directives = [];
+            this.init()
+        }
+
+        mvvm.prototype = {
+            init: function () {
+                this.observer = new observer(this.data);
+                if (this.el.hasChildNodes()) {
+                    Array.from(this.el.childNodes).forEach(this._compileNode, this);
+                }
+                this.observer.on('set', this._updateBindingAt.bind(this));
+            },
+            _updateBindingAt: function () {
+                let path = arguments[1];
+                this._directives.forEach((directive) => {
+                    if (directive.expression !== path) return;
+                    directive.update();
+                })
+            },
+            _compileNode: function (node) {
+                switch (node.nodeType) {
+                    // text
+                    case 1:
+                        this._compileElement(node);
+                        break;
+                    // node
+                    case 3:
+                        this._compileText(node);
+                        break;
+                    default:
+                        return;
+                }
+            },
+            _compileElement: function (node) {
+                if (node.hasChildNodes()) {
+                    Array.from(node.childNodes).forEach(this._compileNode, this);
+                }
+            },
+            _compileText: function (node) {
+                let patt = /{{\w+}}/g;
+                let nodeValue = node.nodeValue;
+
+                let expressions = nodeValue.match(patt);  // 这是一个数组,形如["{{name}}"];
+
+                if (!expressions) return;
+
+                expressions.forEach((expression) => {
+                    let el = document.createTextNode('');
+
+                    node.parentNode.insertBefore(el, node);
+
+                    let property = expression.replace(/[{}]/g, '');
+                    this._bindDirective('text', property, el);
+                });
+
+                node.parentNode.removeChild(node);
+            },
+            _bindDirective: function (name, expression, node) {
+                let dirs = this._directives;
+                dirs.push(
+                    new Directive(name, node, this, expression)
+                );
+            }
+        }
+        const bindViewToData = (el, data) => {
+            new mvvm({
+                data: appData,
+                el: document.getElementById('app')
+            })
+        }
+        bindViewToData()
+    </script>
+</body>
+
+</html>
